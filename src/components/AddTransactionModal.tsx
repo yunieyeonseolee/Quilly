@@ -1,9 +1,8 @@
-import { Picker } from '@react-native-picker/picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Dimensions,
   Keyboard,
-  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -42,8 +41,18 @@ const currencySymbolMap: Record<CurrencyCode, string> = {
 };
 
 const monthNames = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 export const AddTransactionModal = ({
@@ -59,13 +68,10 @@ export const AddTransactionModal = ({
   const [view, setView] = useState<'form' | 'category' | 'date'>('form');
   const [isAddingCustom, setIsAddingCustom] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
-  // Date picker state
+  // Date picker state (iOS wheel)
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [tempYear, setTempYear] = useState(new Date().getFullYear());
-  const [tempMonth, setTempMonth] = useState(new Date().getMonth());
-  const [tempDay, setTempDay] = useState(new Date().getDate());
+  const [tempDate, setTempDate] = useState(new Date());
 
   const amountRef = useRef<TextInput>(null);
 
@@ -89,7 +95,9 @@ export const AddTransactionModal = ({
     []
   );
 
-  const categoriesForType = newTransaction.type === 'expense' ? expenseCategories : incomeCategories;
+  const categoriesForType =
+    newTransaction.type === 'expense' ? expenseCategories : incomeCategories;
+
   const currencySymbol = currencySymbolMap[currencyCode] ?? '$';
 
   const closeAll = () => {
@@ -97,7 +105,6 @@ export const AddTransactionModal = ({
     setView('form');
     setIsAddingCustom(false);
     setCustomCategory('');
-    setKeyboardHeight(0);
     onClose();
   };
 
@@ -111,16 +118,18 @@ export const AddTransactionModal = ({
   const openCategoryPage = () => setView('category');
 
   const openDatePicker = () => {
-    setTempYear(selectedDate.getFullYear());
-    setTempMonth(selectedDate.getMonth());
-    setTempDay(selectedDate.getDate());
+    Keyboard.dismiss();
+    setTempDate(selectedDate);
     setView('date');
   };
 
   const confirmDate = () => {
-    const daysInMonth = new Date(tempYear, tempMonth + 1, 0).getDate();
-    const safeDay = Math.min(tempDay, daysInMonth);
-    setSelectedDate(new Date(tempYear, tempMonth, safeDay));
+    setSelectedDate(tempDate);
+    setView('form');
+  };
+
+  const cancelDate = () => {
+    setTempDate(selectedDate);
     setView('form');
   };
 
@@ -136,11 +145,8 @@ export const AddTransactionModal = ({
   };
 
   const handleSave = () => {
-    if (showDatePicker) {
-      onSave(selectedDate);
-    } else {
-      onSave();
-    }
+    if (showDatePicker) onSave(selectedDate);
+    else onSave();
   };
 
   const canSave =
@@ -149,118 +155,50 @@ export const AddTransactionModal = ({
   // Reset state when modal opens
   useEffect(() => {
     if (!isVisible) return;
+
     setView('form');
     setIsAddingCustom(false);
     setCustomCategory('');
-    
-    // Set initial date
-    if (initialDate) {
-      setSelectedDate(initialDate);
-      setTempYear(initialDate.getFullYear());
-      setTempMonth(initialDate.getMonth());
-      setTempDay(initialDate.getDate());
-    } else {
-      const now = new Date();
-      setSelectedDate(now);
-      setTempYear(now.getFullYear());
-      setTempMonth(now.getMonth());
-      setTempDay(now.getDate());
-    }
-    
+
+    const base = initialDate ?? new Date();
+    setSelectedDate(base);
+    setTempDate(base);
+
     const t = setTimeout(() => amountRef.current?.focus(), 250);
     return () => clearTimeout(t);
   }, [isVisible, initialDate]);
-
-  // Keyboard handling
-  useEffect(() => {
-    if (!isVisible) {
-      setKeyboardHeight(0);
-      return;
-    }
-
-    const showEvt = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvt = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-
-    const onShow = (e: any) => setKeyboardHeight(e?.endCoordinates?.height ?? 0);
-    const onHide = () => setKeyboardHeight(0);
-
-    const s = Keyboard.addListener(showEvt, onShow);
-    const h = Keyboard.addListener(hideEvt, onHide);
-
-    return () => {
-      s.remove();
-      h.remove();
-    };
-  }, [isVisible]);
 
   const formatDate = (date: Date) => {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
 
-    if (date.toDateString() === today.toDateString()) {
-      return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    } else {
-      return `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
-    }
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    return `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
   };
 
   const maxSheetHeight = Math.floor(Dimensions.get('window').height * 0.88);
-  const lift = keyboardHeight ? Math.min(Math.max(keyboardHeight - 12, 0), 280) : 0;
   const footerHeight = 84;
 
-  // Date Picker View - Native iOS Style
-  const renderDatePicker = () => {
-    const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i);
-    const months = Array.from({ length: 12 }, (_, i) => i + 1);
-    const daysInMonth = new Date(tempYear, tempMonth + 1, 0).getDate();
-    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-
+  const renderDateCard = () => {
     return (
-      <View style={local.body}>
-        <View style={local.pickerContainer}>
-          {/* Year */}
-          <Picker
-            selectedValue={tempYear}
-            onValueChange={(val) => setTempYear(val)}
-            style={local.picker}
-            itemStyle={local.pickerItemStyle}
-          >
-            {years.map((year) => (
-              <Picker.Item key={year} label={`${year}년`} value={year} />
-            ))}
-          </Picker>
-
-          {/* Month */}
-          <Picker
-            selectedValue={tempMonth + 1}
-            onValueChange={(val) => setTempMonth(val - 1)}
-            style={local.picker}
-            itemStyle={local.pickerItemStyle}
-          >
-            {months.map((month) => (
-              <Picker.Item key={month} label={`${month}월`} value={month} />
-            ))}
-          </Picker>
-
-          {/* Day */}
-          <Picker
-            selectedValue={tempDay}
-            onValueChange={(val) => setTempDay(val)}
-            style={local.picker}
-            itemStyle={local.pickerItemStyle}
-          >
-            {days.map((day) => (
-              <Picker.Item key={day} label={`${day}일`} value={day} />
-            ))}
-          </Picker>
+      <View style={local.dateCard}>
+        <View style={local.nativePickerWrap}>
+          <DateTimePicker
+            value={tempDate}
+            mode="date"
+            display="spinner"
+            themeVariant="light"
+            onChange={(_, date) => {
+              if (date) setTempDate(date);
+            }}
+            style={local.wheel}
+          />
         </View>
 
-        {/* Buttons */}
-        <View style={local.datePickerButtons}>
-          <TouchableOpacity style={local.datePickerButton} onPress={goBackToForm}>
+        <View style={local.datePickerButtonsSmall}>
+          <TouchableOpacity style={local.datePickerButton} onPress={cancelDate}>
             <Text style={local.cancelText}>취소</Text>
           </TouchableOpacity>
           <TouchableOpacity style={local.datePickerButton} onPress={confirmDate}>
@@ -277,218 +215,243 @@ export const AddTransactionModal = ({
       onBackdropPress={closeAll}
       onSwipeComplete={closeAll}
       swipeDirection={['down']}
-      style={styles.modal}
+      style={[styles.modal, view === 'date' ? local.centeredModal : undefined]}
       backdropTransitionOutTiming={0}
-      avoidKeyboard={false}
+      avoidKeyboard
       propagateSwipe
     >
-      <View style={local.kav}>
-        <SafeAreaView style={local.safeArea}>
-          <View
-            style={[
-              styles.modalContent,
-              local.sheet,
-              {
-                maxHeight: maxSheetHeight,
-                marginBottom: lift,
-              },
-            ]}
-          >
-            <View style={styles.modalHandle} />
+      {view === 'date' ? (
+        renderDateCard()
+      ) : (
+        <View style={local.kav}>
+          <SafeAreaView style={local.safeArea}>
+            <View
+              style={[
+                styles.modalContent,
+                local.sheet,
+                {
+                  maxHeight: maxSheetHeight,
+                },
+              ]}
+            >
+              <View style={styles.modalHandle} />
 
-            {/* Header */}
-            <View style={local.headerRow}>
-              {view !== 'form' ? (
-                <TouchableOpacity onPress={goBackToForm} style={local.headerBtn}>
-                  <Text style={local.headerBtnText}>‹</Text>
+              {/* Header */}
+              <View style={local.headerRow}>
+                {view !== 'form' ? (
+                  <TouchableOpacity onPress={goBackToForm} style={local.headerBtn}>
+                    <Text style={local.headerBtnText}>‹</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <View style={local.headerBtnPlaceholder} />
+                )}
+
+                <Text style={styles.modalDate}>
+                  {view === 'form' && 'Add Transaction'}
+                  {view === 'category' && 'Select Category'}
+                </Text>
+
+                <TouchableOpacity onPress={closeAll} style={local.headerBtn}>
+                  <Text style={local.headerBtnText}>×</Text>
                 </TouchableOpacity>
-              ) : (
-                <View style={local.headerBtnPlaceholder} />
-              )}
+              </View>
 
-              <Text style={styles.modalDate}>
-                {view === 'form' && 'Add Transaction'}
-                {view === 'category' && 'Select Category'}
-                {view === 'date' && 'Select Date'}
-              </Text>
+              {view === 'form' ? (
+                <View style={local.body}>
+                  <ScrollView
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={[
+                      local.scrollContent,
+                      { paddingBottom: footerHeight + 12 },
+                    ]}
+                  >
+                    {/* Type Toggle */}
+                    <View style={styles.typeToggle}>
+                      <TouchableOpacity
+                        style={[
+                          styles.typeButton,
+                          newTransaction.type === 'expense' && styles.typeButtonActive,
+                        ]}
+                        onPress={() =>
+                          onChangeTransaction({
+                            ...newTransaction,
+                            type: 'expense',
+                            category: '',
+                          })
+                        }
+                      >
+                        <Text
+                          style={[
+                            styles.typeButtonText,
+                            newTransaction.type === 'expense' && styles.typeButtonTextActive,
+                          ]}
+                        >
+                          Expense
+                        </Text>
+                      </TouchableOpacity>
 
-              <TouchableOpacity onPress={closeAll} style={local.headerBtn}>
-                <Text style={local.headerBtnText}>×</Text>
-              </TouchableOpacity>
-            </View>
+                      <TouchableOpacity
+                        style={[
+                          styles.typeButton,
+                          newTransaction.type === 'income' && styles.typeButtonActive,
+                        ]}
+                        onPress={() =>
+                          onChangeTransaction({
+                            ...newTransaction,
+                            type: 'income',
+                            category: '',
+                          })
+                        }
+                      >
+                        <Text
+                          style={[
+                            styles.typeButtonText,
+                            newTransaction.type === 'income' && styles.typeButtonTextActive,
+                          ]}
+                        >
+                          Income
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
 
-            {view === 'form' ? (
-              <View style={local.body}>
-                <ScrollView
-                  keyboardShouldPersistTaps="handled"
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={[local.scrollContent, { paddingBottom: footerHeight + 12 }]}
-                >
-                  {/* Type Toggle */}
-                  <View style={styles.typeToggle}>
+                    {/* Amount */}
+                    <View style={local.amountWrap}>
+                      <Text style={local.currencySymbol}>{currencySymbol}</Text>
+                      <TextInput
+                        ref={amountRef}
+                        style={local.amountInput}
+                        placeholder="0"
+                        keyboardType="decimal-pad"
+                        value={newTransaction.amount}
+                        onChangeText={(text) =>
+                          onChangeTransaction({ ...newTransaction, amount: text })
+                        }
+                        returnKeyType="done"
+                      />
+                    </View>
+
+                    {/* Date Row */}
+                    {showDatePicker && (
+                      <TouchableOpacity style={local.row} onPress={openDatePicker}>
+                        <Text style={local.rowLabel}>Date</Text>
+                        <Text style={local.rowValue}>{formatDate(selectedDate)}</Text>
+                        <Text style={local.rowChevron}>›</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {/* Category row */}
                     <TouchableOpacity
-                      style={[
-                        styles.typeButton,
-                        newTransaction.type === 'expense' && styles.typeButtonActive,
-                      ]}
-                      onPress={() => onChangeTransaction({ ...newTransaction, type: 'expense', category: '' })}
+                      activeOpacity={0.85}
+                      onPress={openCategoryPage}
+                      style={local.row}
                     >
+                      <Text style={local.rowLabel}>Category</Text>
                       <Text
                         style={[
-                          styles.typeButtonText,
-                          newTransaction.type === 'expense' && styles.typeButtonTextActive,
+                          local.rowValue,
+                          !newTransaction.category && local.rowPlaceholder,
                         ]}
                       >
-                        Expense
+                        {newTransaction.category ? newTransaction.category : 'Select category'}
                       </Text>
+                      <Text style={local.rowChevron}>›</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity
-                      style={[
-                        styles.typeButton,
-                        newTransaction.type === 'income' && styles.typeButtonActive,
-                      ]}
-                      onPress={() => onChangeTransaction({ ...newTransaction, type: 'income', category: '' })}
-                    >
-                      <Text
-                        style={[
-                          styles.typeButtonText,
-                          newTransaction.type === 'income' && styles.typeButtonTextActive,
-                        ]}
-                      >
-                        Income
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* Amount */}
-                  <View style={local.amountWrap}>
-                    <Text style={local.currencySymbol}>{currencySymbol}</Text>
+                    {/* Note Input */}
                     <TextInput
-                      ref={amountRef}
-                      style={local.amountInput}
-                      placeholder="0"
-                      keyboardType={Platform.OS === 'ios' ? 'decimal-pad' : 'numeric'}
-                      value={newTransaction.amount}
+                      style={styles.noteInput}
+                      placeholder="Add a note..."
+                      value={newTransaction.note}
                       onChangeText={(text) =>
-                        onChangeTransaction({ ...newTransaction, amount: text })
+                        onChangeTransaction({ ...newTransaction, note: text })
                       }
                       returnKeyType="done"
                     />
-                  </View>
+                  </ScrollView>
 
-                  {/* Date Row - Only show if showDatePicker is true */}
-                  {showDatePicker && (
-                    <TouchableOpacity style={local.row} onPress={openDatePicker}>
-                      <Text style={local.rowLabel}>Date</Text>
-                      <Text style={local.rowValue}>{formatDate(selectedDate)}</Text>
-                      <Text style={local.rowChevron}>›</Text>
+                  {/* Save pinned */}
+                  <View style={[local.footerPinned, { height: footerHeight }]}>
+                    <TouchableOpacity
+                      style={[styles.addButton, !canSave && local.disabledBtn, { marginTop: 0 }]}
+                      onPress={handleSave}
+                      disabled={!canSave}
+                    >
+                      <Text style={[styles.addButtonText, !canSave && local.disabledBtnText]}>
+                        Save
+                      </Text>
                     </TouchableOpacity>
-                  )}
-
-                  {/* Category row */}
-                  <TouchableOpacity
-                    activeOpacity={0.85}
-                    onPress={openCategoryPage}
-                    style={local.row}
-                  >
-                    <Text style={local.rowLabel}>Category</Text>
-                    <Text style={[local.rowValue, !newTransaction.category && local.rowPlaceholder]}>
-                      {newTransaction.category ? newTransaction.category : 'Select category'}
-                    </Text>
-                    <Text style={local.rowChevron}>›</Text>
-                  </TouchableOpacity>
-
-                  {/* Note Input */}
-                  <TextInput
-                    style={styles.noteInput}
-                    placeholder="Add a note..."
-                    value={newTransaction.note}
-                    onChangeText={(text) => onChangeTransaction({ ...newTransaction, note: text })}
-                    returnKeyType="done"
-                  />
-                </ScrollView>
-
-                {/* Save pinned */}
-                <View style={[local.footerPinned, { height: footerHeight }]}>
-                  <TouchableOpacity
-                    style={[styles.addButton, !canSave && local.disabledBtn, { marginTop: 0 }]}
-                    onPress={handleSave}
-                    disabled={!canSave}
-                  >
-                    <Text style={[styles.addButtonText, !canSave && local.disabledBtnText]}>
-                      Save
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ) : view === 'category' ? (
-              <View style={local.body}>
-                <ScrollView
-                  keyboardShouldPersistTaps="handled"
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={local.scrollContent}
-                >
-                  {/* + Add custom */}
-                  <TouchableOpacity
-                    style={local.addCustomRow}
-                    onPress={() => setIsAddingCustom((v) => !v)}
-                    activeOpacity={0.85}
-                  >
-                    <Text style={local.addCustomPlus}>＋</Text>
-                    <Text style={local.addCustomText}>Add custom</Text>
-                  </TouchableOpacity>
-
-                  {isAddingCustom && (
-                    <View style={local.customWrap}>
-                      <TextInput
-                        value={customCategory}
-                        onChangeText={setCustomCategory}
-                        placeholder="Type a category name..."
-                        style={local.customInput}
-                        returnKeyType="done"
-                        onSubmitEditing={addCustomAndSelect}
-                      />
-                      <TouchableOpacity
-                        style={[local.customSave, !customCategory.trim() && local.disabledBtn]}
-                        disabled={!customCategory.trim()}
-                        onPress={addCustomAndSelect}
-                      >
-                        <Text style={local.customSaveText}>Add</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-
-                  <Text style={local.sectionTitle}>
-                    {newTransaction.type === 'expense' ? 'Expense categories' : 'Income categories'}
-                  </Text>
-
-                  <View style={local.list}>
-                    {categoriesForType.map((cat) => {
-                      const selected = newTransaction.category === cat;
-                      return (
-                        <TouchableOpacity
-                          key={cat}
-                          style={[local.listRow, selected && local.listRowSelected]}
-                          onPress={() => selectCategory(cat)}
-                          activeOpacity={0.85}
-                        >
-                          <Text style={[local.listText, selected && local.listTextSelected]}>
-                            {cat}
-                          </Text>
-                          {selected && <Text style={local.check}>✓</Text>}
-                        </TouchableOpacity>
-                      );
-                    })}
                   </View>
-                </ScrollView>
-              </View>
-            ) : (
-              renderDatePicker()
-            )}
-          </View>
-        </SafeAreaView>
-      </View>
+                </View>
+              ) : (
+                // category
+                <View style={local.body}>
+                  <ScrollView
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={local.scrollContent}
+                  >
+                    {/* + Add custom */}
+                    <TouchableOpacity
+                      style={local.addCustomRow}
+                      onPress={() => setIsAddingCustom((v) => !v)}
+                      activeOpacity={0.85}
+                    >
+                      <Text style={local.addCustomPlus}>＋</Text>
+                      <Text style={local.addCustomText}>Add custom</Text>
+                    </TouchableOpacity>
+
+                    {isAddingCustom && (
+                      <View style={local.customWrap}>
+                        <TextInput
+                          value={customCategory}
+                          onChangeText={setCustomCategory}
+                          placeholder="Type a category name..."
+                          style={local.customInput}
+                          returnKeyType="done"
+                          onSubmitEditing={addCustomAndSelect}
+                        />
+                        <TouchableOpacity
+                          style={[local.customSave, !customCategory.trim() && local.disabledBtn]}
+                          disabled={!customCategory.trim()}
+                          onPress={addCustomAndSelect}
+                        >
+                          <Text style={local.customSaveText}>Add</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+
+                    <Text style={local.sectionTitle}>
+                      {newTransaction.type === 'expense'
+                        ? 'Expense categories'
+                        : 'Income categories'}
+                    </Text>
+
+                    <View style={local.list}>
+                      {categoriesForType.map((cat) => {
+                        const selected = newTransaction.category === cat;
+                        return (
+                          <TouchableOpacity
+                            key={cat}
+                            style={[local.listRow, selected && local.listRowSelected]}
+                            onPress={() => selectCategory(cat)}
+                            activeOpacity={0.85}
+                          >
+                            <Text style={[local.listText, selected && local.listTextSelected]}>
+                              {cat}
+                            </Text>
+                            {selected && <Text style={local.check}>✓</Text>}
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+          </SafeAreaView>
+        </View>
+      )}
     </Modal>
   );
 };
@@ -496,6 +459,12 @@ export const AddTransactionModal = ({
 const local = StyleSheet.create({
   kav: { flex: 1 },
   safeArea: { flex: 1, justifyContent: 'flex-end' },
+
+  centeredModal: {
+    justifyContent: 'center',
+    margin: 0,
+    paddingHorizontal: 16,
+  },
 
   sheet: {
     flexGrow: 1,
@@ -629,40 +598,46 @@ const local = StyleSheet.create({
   disabledBtn: { opacity: 0.45 },
   disabledBtnText: { opacity: 0.9 },
 
-  // Native iOS Picker styles
-  pickerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+  // Small centered iOS date picker card
+  dateCard: {
     backgroundColor: colors.white,
-    borderRadius: 12,
-    marginVertical: 20,
+    borderRadius: 25,
+    paddingTop: 5,
+    paddingBottom: 10,
+    paddingHorizontal: 10,
+    width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
   },
-  picker: {
-    flex: 1,
-    height: 200,
+
+  nativePickerWrap: {
+    backgroundColor: colors.white,
+    overflow: 'hidden',
   },
-  pickerItemStyle: {
-    fontSize: 20,
-    fontWeight: '500',
+
+  wheel: {
+    height: 170,
   },
-  datePickerButtons: {
+
+  datePickerButtonsSmall: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 40,
-    paddingBottom: 20,
+    paddingHorizontal: 28
   },
+
   datePickerButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 30,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
   },
+
   cancelText: {
     fontSize: 16,
     color: colors.gray600,
+    fontWeight: '600',
   },
   confirmText: {
     fontSize: 16,
     color: colors.black,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });
