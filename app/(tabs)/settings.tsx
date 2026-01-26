@@ -1,10 +1,17 @@
-import { useState } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { useSettings } from '../../src/hooks/useSettings';
+import { settingsStyles as styles } from '../../src/styles/settingsStyles';
 
 export default function SettingsScreen() {
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [language, setLanguage] = useState('system');
-  const [currency, setCurrency] = useState('USD');
+  const { settings, isLoading, updateSettings } = useSettings();
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -17,8 +24,8 @@ export default function SettingsScreen() {
         <View style={styles.row}>
           <Text style={styles.rowText}>Notifications</Text>
           <Switch
-            value={notificationsEnabled}
-            onValueChange={setNotificationsEnabled}
+            value={settings.notificationsEnabled}
+            onValueChange={(value) => updateSettings({ notificationsEnabled: value })}
           />
         </View>
 
@@ -27,22 +34,22 @@ export default function SettingsScreen() {
           <Text style={styles.rowText}>Language</Text>
           <View style={styles.options}>
             <TouchableOpacity
-              style={[styles.optionButton, language === 'system' && styles.optionSelected]}
-              onPress={() => setLanguage('system')}
+              style={[styles.optionButton, settings.language === 'system' && styles.optionSelected]}
+              onPress={() => updateSettings({ language: 'system' })}
             >
-              <Text style={[styles.optionText, language === 'system' && styles.optionTextSelected]}>System</Text>
+              <Text style={[styles.optionText, settings.language === 'system' && styles.optionTextSelected]}>System</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.optionButton, language === 'en' && styles.optionSelected]}
-              onPress={() => setLanguage('en')}
+              style={[styles.optionButton, settings.language === 'en' && styles.optionSelected]}
+              onPress={() => updateSettings({ language: 'en' })}
             >
-              <Text style={[styles.optionText, language === 'en' && styles.optionTextSelected]}>English</Text>
+              <Text style={[styles.optionText, settings.language === 'en' && styles.optionTextSelected]}>English</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.optionButton, language === 'ko' && styles.optionSelected]}
-              onPress={() => setLanguage('ko')}
+              style={[styles.optionButton, settings.language === 'ko' && styles.optionSelected]}
+              onPress={() => updateSettings({ language: 'ko' })}
             >
-              <Text style={[styles.optionText, language === 'ko' && styles.optionTextSelected]}>한국어</Text>
+              <Text style={[styles.optionText, settings.language === 'ko' && styles.optionTextSelected]}>한국어</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -52,16 +59,16 @@ export default function SettingsScreen() {
           <Text style={styles.rowText}>Currency</Text>
           <View style={styles.options}>
             <TouchableOpacity
-              style={[styles.optionButton, currency === 'USD' && styles.optionSelected]}
-              onPress={() => setCurrency('USD')}
+              style={[styles.optionButton, settings.currency === 'USD' && styles.optionSelected]}
+              onPress={() => updateSettings({ currency: 'USD' })}
             >
-              <Text style={[styles.optionText, currency === 'USD' && styles.optionTextSelected]}>$ USD</Text>
+              <Text style={[styles.optionText, settings.currency === 'USD' && styles.optionTextSelected]}>$ USD</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.optionButton, currency === 'KRW' && styles.optionSelected]}
-              onPress={() => setCurrency('KRW')}
+              style={[styles.optionButton, settings.currency === 'KRW' && styles.optionSelected]}
+              onPress={() => updateSettings({ currency: 'KRW' })}
             >
-              <Text style={[styles.optionText, currency === 'KRW' && styles.optionTextSelected]}>₩ KRW</Text>
+              <Text style={[styles.optionText, settings.currency === 'KRW' && styles.optionTextSelected]}>₩ KRW</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -90,7 +97,7 @@ export default function SettingsScreen() {
           <Text style={styles.rowText}>Privacy Policy</Text>
           <Text style={styles.arrow}>›</Text>
         </TouchableOpacity>
-        <View style={styles.row}>
+        <View style={[styles.row, { borderBottomWidth: 0 }]}>
           <Text style={styles.rowText}>Version</Text>
           <Text style={styles.rowSubtext}>1.0.0</Text>
         </View>
@@ -99,71 +106,3 @@ export default function SettingsScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 20,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-    marginBottom: 8,
-    marginTop: 20,
-    textTransform: 'uppercase',
-  },
-  section: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  rowColumn: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  rowText: {
-    fontSize: 16,
-  },
-  rowSubtext: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 4,
-    maxWidth: 250,
-  },
-  arrow: {
-    fontSize: 20,
-    color: '#ccc',
-  },
-  options: {
-    flexDirection: 'row',
-    marginTop: 10,
-    gap: 8,
-  },
-  optionButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: '#eee',
-  },
-  optionSelected: {
-    backgroundColor: '#000',
-  },
-  optionText: {
-    fontSize: 14,
-    color: '#333',
-  },
-  optionTextSelected: {
-    color: '#fff',
-  },
-});
