@@ -7,12 +7,14 @@ type Settings = {
   notificationsEnabled: boolean;
   language: 'system' | 'en' | 'ko';
   currency: 'USD' | 'KRW';
+  recurringApplyTimeMinutes: number;
 };
 
 const defaultSettings: Settings = {
   notificationsEnabled: true,
   language: 'system',
   currency: 'USD',
+  recurringApplyTimeMinutes: 22 * 60,
 };
 
 type SettingsContextType = {
@@ -33,7 +35,7 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
       try {
         const data = await AsyncStorage.getItem(SETTINGS_KEY);
         if (data) {
-          setSettings(JSON.parse(data));
+          setSettings({ ...defaultSettings, ...JSON.parse(data) });
         }
       } catch (error) {
         console.error('Error loading settings:', error);

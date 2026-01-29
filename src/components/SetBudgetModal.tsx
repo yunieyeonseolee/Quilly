@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import Modal from 'react-native-modal';
 import { colors } from '../styles/colors';
 import { Budget } from '../types/budget';
@@ -35,6 +36,7 @@ export const SetBudgetModal = ({
   const [monthlyAmount, setMonthlyAmount] = useState('');
   const [showWeeklyOnMain, setShowWeeklyOnMain] = useState(true);
   const [showMonthlyOnMain, setShowMonthlyOnMain] = useState(false);
+  const [monthlyCycleAnchorDay, setMonthlyCycleAnchorDay] = useState(1);
 
   useEffect(() => {
     if (isVisible) {
@@ -42,6 +44,7 @@ export const SetBudgetModal = ({
       setMonthlyAmount(budget.monthlyAmount > 0 ? budget.monthlyAmount.toString() : '');
       setShowWeeklyOnMain(budget.showWeeklyOnMain);
       setShowMonthlyOnMain(budget.showMonthlyOnMain);
+      setMonthlyCycleAnchorDay(budget.monthlyCycleAnchorDay || 1);
     }
   }, [isVisible, budget]);
 
@@ -52,6 +55,7 @@ export const SetBudgetModal = ({
       monthlyAmount: parseFloat(monthlyAmount) || 0,
       showWeeklyOnMain,
       showMonthlyOnMain,
+      monthlyCycleAnchorDay,
     });
     onClose();
   };
@@ -135,6 +139,20 @@ export const SetBudgetModal = ({
                 onChangeText={setMonthlyAmount}
                 returnKeyType="done"
               />
+            </View>
+            <View style={styles.cycleRow}>
+              <Text style={styles.cycleLabel}>Cycle starts on day</Text>
+              <View style={styles.cyclePickerWrap}>
+                <Picker
+                  selectedValue={monthlyCycleAnchorDay}
+                  onValueChange={(value) => setMonthlyCycleAnchorDay(Number(value))}
+                  style={styles.cyclePicker}
+                >
+                  {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                    <Picker.Item key={day} label={String(day)} value={day} />
+                  ))}
+                </Picker>
+              </View>
             </View>
           </View>
 
@@ -241,6 +259,23 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
+  },
+  cycleRow: {
+    marginTop: 12,
+  },
+  cycleLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.gray600,
+    marginBottom: 6,
+  },
+  cyclePickerWrap: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: colors.gray100,
+  },
+  cyclePicker: {
+    height: 120,
   },
   currencySymbol: {
     fontSize: 24,

@@ -1,4 +1,4 @@
-import { Alert, ScrollView, TouchableOpacity, View } from 'react-native';
+import { Alert, Platform, ScrollView, TouchableOpacity, View } from 'react-native';
 import Modal from 'react-native-modal';
 import { homeStyles as styles } from '../styles/homeStyles';
 import { TxDay } from '../types/transaction';
@@ -12,7 +12,12 @@ type DayDetailModalProps = {
   onClose: () => void;
   onAddPress: () => void;
   onModalHide: () => void;
-  onDeleteTransaction: (dateKey: string, itemIndex: number) => void;  // ← Add this
+  onDeleteTransaction: (dateKey: string, itemIndex: number, item: TxDay['items'][number]) => void;  // ← Add this
+  onEditTransaction: (
+    dateKey: string,
+    itemIndex: number,
+    item: { type: 'income' | 'expense'; amount: number; note: string; category: string; recurringId?: string }
+  ) => void;
 };
 
 export const DayDetailModal = ({
@@ -24,21 +29,32 @@ export const DayDetailModal = ({
   onAddPress,
   onModalHide,
   onDeleteTransaction,
+  onEditTransaction,
 }: DayDetailModalProps) => {
 
-  const handleDelete = (index: number, category: string) => {
-    Alert.alert(
-      'Delete Transaction',
-      `Are you sure you want to delete "${category}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => onDeleteTransaction(dateKey, index),
+  const handleDelete = (index: number, category: string, item: TxDay['items'][number]) => {
+    const message = `Are you sure you want to delete "${category}"?`;
+
+    if (Platform.OS === 'web' && typeof globalThis.confirm === 'function') {
+      const confirmed = globalThis.confirm(message);
+      if (confirmed) {
+        onDeleteTransaction(dateKey, index, item);
+        onClose();
+      }
+      return;
+    }
+
+    Alert.alert('Delete Transaction', message, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          onDeleteTransaction(dateKey, index, item);
+          onClose();
         },
-      ]
-    );
+      },
+    ]);
   };
 
   return (
@@ -58,24 +74,34 @@ export const DayDetailModal = ({
         {transaction && transaction.items ? (
           <ScrollView style={styles.transactionsList}>
             {transaction.items.map((item, index) => (
-              <TouchableOpacity 
-                key={index} 
-                style={styles.transactionItem}
-                onLongPress={() => handleDelete(index, item.category)}
-              >
+              <View key={index} style={styles.transactionItem}>
                 <View style={styles.transactionLeft}>
                   <Text style={styles.transactionCategory}>{item.category}</Text>
                   <Text style={styles.transactionNote}>{item.note}</Text>
                 </View>
-                <Text
-                  style={[
-                    styles.transactionAmount,
-                    item.type === 'income' ? styles.incomeAmount : styles.expenseAmount,
-                  ]}
-                >
-                  {item.type === 'income' ? '+' : '-'}${item.amount}
-                </Text>
-              </TouchableOpacity>
+                <View style={styles.transactionRight}>
+                  <Text
+                    style={[
+                      styles.transactionAmount,
+                      item.type === 'income' ? styles.incomeAmount : styles.expenseAmount,
+                    ]}
+                  >
+                    {item.type === 'income' ? '+' : '-'}${item.amount}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={() => onEditTransaction(dateKey, index, item)}
+                  >
+                    <Text style={styles.editButtonText}>Edit</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleDelete(index, item.category, item)}
+                  >
+                    <Text style={styles.deleteButtonText}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             ))}
           </ScrollView>
         ) : (

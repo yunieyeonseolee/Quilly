@@ -9,6 +9,7 @@ const defaultBudget: Budget = {
   monthlyAmount: 0,
   showWeeklyOnMain: true,
   showMonthlyOnMain: false,
+  monthlyCycleAnchorDay: 1,
 };
 
 export const useBudget = () => {

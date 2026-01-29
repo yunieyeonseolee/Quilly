@@ -21,6 +21,8 @@ type NewTransaction = {
   amount: string;
   note: string;
   category: string;
+  repeat: 'none' | 'daily' | 'weekday' | 'weekly' | 'monthly';
+  repeatEndDate?: Date | null;
 };
 
 type AddTransactionModalProps = {
@@ -31,6 +33,7 @@ type AddTransactionModalProps = {
   onChangeTransaction: (transaction: NewTransaction) => void;
   showDatePicker?: boolean;
   initialDate?: Date;
+  allowRepeat?: boolean;
 };
 
 const monthNames = [
@@ -56,16 +59,20 @@ export const AddTransactionModal = ({
   onChangeTransaction,
   showDatePicker = false,
   initialDate,
+  allowRepeat = true,
 }: AddTransactionModalProps) => {
   const { currencySymbol } = useCurrency();
 
-  const [view, setView] = useState<'form' | 'category' | 'date'>('form');
+  const [view, setView] = useState<'form' | 'category' | 'repeat' | 'date'>('form');
   const [isAddingCustom, setIsAddingCustom] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
 
   // Date picker state (iOS wheel)
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [tempDate, setTempDate] = useState(new Date());
+  const [activeDatePicker, setActiveDatePicker] = useState<'transaction' | 'repeatEnd'>(
+    'transaction'
+  );
 
   const amountRef = useRef<React.ElementRef<typeof TextInput>>(null);
 
@@ -109,20 +116,30 @@ export const AddTransactionModal = ({
   };
 
   const openCategoryPage = () => setView('category');
+  const openRepeatPage = () => setView('repeat');
 
-  const openDatePicker = () => {
+  const openDatePicker = (target: 'transaction' | 'repeatEnd') => {
+    setActiveDatePicker(target);
     Keyboard.dismiss();
-    setTempDate(selectedDate);
+    const base =
+      target === 'repeatEnd'
+        ? newTransaction.repeatEndDate ?? selectedDate
+        : selectedDate;
+    setTempDate(base);
     setView('date');
   };
 
   const confirmDate = () => {
-    setSelectedDate(tempDate);
+    if (activeDatePicker === 'transaction') {
+      setSelectedDate(tempDate);
+    } else {
+      onChangeTransaction({ ...newTransaction, repeatEndDate: tempDate });
+    }
     setView('form');
   };
 
   const cancelDate = () => {
-    setTempDate(selectedDate);
+    setTempDate(activeDatePicker === 'repeatEnd' ? newTransaction.repeatEndDate ?? selectedDate : selectedDate);
     setView('form');
   };
 
@@ -142,6 +159,21 @@ export const AddTransactionModal = ({
     else onSave();
   };
 
+  const repeatLabel = (repeat: NewTransaction['repeat']) => {
+    switch (repeat) {
+      case 'daily':
+        return 'Daily';
+      case 'weekday':
+        return 'Weekdays (Mon–Fri)';
+      case 'weekly':
+        return 'Weekly';
+      case 'monthly':
+        return 'Monthly';
+      default:
+        return 'None';
+    }
+  };
+
   const canSave =
     newTransaction.amount.trim().length > 0 && newTransaction.category.trim().length > 0;
 
@@ -156,6 +188,7 @@ export const AddTransactionModal = ({
     const base = initialDate ?? new Date();
     setSelectedDate(base);
     setTempDate(base);
+    setActiveDatePicker('transaction');
 
     const t = setTimeout(() => amountRef.current?.focus(), 250);
     return () => clearTimeout(t);
@@ -242,6 +275,7 @@ export const AddTransactionModal = ({
                 <Text style={styles.modalDate}>
                   {view === 'form' && 'Add Transaction'}
                   {view === 'category' && 'Select Category'}
+                  {view === 'repeat' && 'Repeat'}
                 </Text>
 
                 <TouchableOpacity onPress={closeAll} style={local.headerBtn}>
@@ -326,7 +360,10 @@ export const AddTransactionModal = ({
 
                     {/* Date Row */}
                     {showDatePicker && (
-                      <TouchableOpacity style={local.row} onPress={openDatePicker}>
+                      <TouchableOpacity
+                        style={local.row}
+                        onPress={() => openDatePicker('transaction')}
+                      >
                         <Text style={local.rowLabel}>Date</Text>
                         <Text style={local.rowValue}>{formatDate(selectedDate)}</Text>
                         <Text style={local.rowChevron}>›</Text>
@@ -361,6 +398,55 @@ export const AddTransactionModal = ({
                       }
                       returnKeyType="done"
                     />
+
+                    {/* Repeat */}
+                    {allowRepeat && (
+                      <>
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          onPress={openRepeatPage}
+                          style={local.row}
+                        >
+                          <Text style={local.rowLabel}>Repeat</Text>
+                          <Text style={local.rowValue}>
+                            {repeatLabel(newTransaction.repeat)}
+                          </Text>
+                          <Text style={local.rowChevron}>›</Text>
+                        </TouchableOpacity>
+
+                        {newTransaction.repeat !== 'none' && (
+                          <>
+                            <TouchableOpacity
+                              activeOpacity={0.85}
+                              onPress={() => openDatePicker('repeatEnd')}
+                              style={local.row}
+                            >
+                              <Text style={local.rowLabel}>Ends</Text>
+                              <Text style={local.rowValue}>
+                                {newTransaction.repeatEndDate
+                                  ? formatDate(newTransaction.repeatEndDate)
+                                  : 'Never'}
+                              </Text>
+                              <Text style={local.rowChevron}>›</Text>
+                            </TouchableOpacity>
+                            {newTransaction.repeatEndDate && (
+                              <TouchableOpacity
+                                activeOpacity={0.85}
+                                onPress={() =>
+                                  onChangeTransaction({
+                                    ...newTransaction,
+                                    repeatEndDate: null,
+                                  })
+                                }
+                                style={local.clearRow}
+                              >
+                                <Text style={local.clearText}>Clear end date</Text>
+                              </TouchableOpacity>
+                            )}
+                          </>
+                        )}
+                      </>
+                    )}
                   </ScrollView>
 
                   {/* Save pinned */}
@@ -376,7 +462,7 @@ export const AddTransactionModal = ({
                     </TouchableOpacity>
                   </View>
                 </View>
-              ) : (
+              ) : view === 'category' ? (
                 // category
                 <View style={local.body}>
                   <ScrollView
@@ -432,6 +518,52 @@ export const AddTransactionModal = ({
                           >
                             <Text style={[local.listText, selected && local.listTextSelected]}>
                               {cat}
+                            </Text>
+                            {selected && <Text style={local.check}>✓</Text>}
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </ScrollView>
+                </View>
+              ) : (
+                // repeat
+                <View style={local.body}>
+                  <ScrollView
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={local.scrollContent}
+                  >
+                    <View style={local.list}>
+                      {(
+                        [
+                          { label: 'None', value: 'none' },
+                          { label: 'Daily', value: 'daily' },
+                          { label: 'Weekdays (Mon–Fri)', value: 'weekday' },
+                          { label: 'Weekly', value: 'weekly' },
+                          { label: 'Monthly', value: 'monthly' },
+                        ] as Array<{ label: string; value: NewTransaction['repeat'] }>
+                      ).map((option) => {
+                        const selected = newTransaction.repeat === option.value;
+                        return (
+                          <TouchableOpacity
+                            key={option.value}
+                            style={[local.listRow, selected && local.listRowSelected]}
+                            onPress={() => {
+                              onChangeTransaction({
+                                ...newTransaction,
+                                repeat: option.value,
+                                repeatEndDate:
+                                  option.value === 'none'
+                                    ? null
+                                    : newTransaction.repeatEndDate || null,
+                              });
+                              setView('form');
+                            }}
+                            activeOpacity={0.85}
+                          >
+                            <Text style={[local.listText, selected && local.listTextSelected]}>
+                              {option.label}
                             </Text>
                             {selected && <Text style={local.check}>✓</Text>}
                           </TouchableOpacity>
@@ -518,6 +650,16 @@ const local = StyleSheet.create({
   rowValue: { flex: 1, fontSize: 14, textAlign: 'right', opacity: 0.9, marginRight: 8 },
   rowPlaceholder: { opacity: 0.5 },
   rowChevron: { fontSize: 18, opacity: 0.6 },
+  clearRow: {
+    marginBottom: 12,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 6,
+  },
+  clearText: {
+    fontSize: 12,
+    color: colors.gray600,
+    fontWeight: '600',
+  },
 
   footerPinned: {
     position: 'absolute',

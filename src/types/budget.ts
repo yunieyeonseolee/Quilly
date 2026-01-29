@@ -3,4 +3,5 @@ export type Budget = {
   monthlyAmount: number;
   showWeeklyOnMain: boolean;
   showMonthlyOnMain: boolean;
+  monthlyCycleAnchorDay: number;
 };

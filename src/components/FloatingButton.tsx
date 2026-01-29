@@ -7,12 +7,14 @@ type FloatingButtonProps = {
   onNewTransaction: () => void;
   onPaymentReminder: () => void;
   onSetBudget: () => void;
+  onManageRecurring: () => void;
 };
 
 export const FloatingButton = ({
   onNewTransaction,
   onPaymentReminder,
   onSetBudget,
+  onManageRecurring,
 }: FloatingButtonProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -56,6 +58,14 @@ export const FloatingButton = ({
             >
               <Text style={styles.menuIcon}>⚙️</Text>
               <Text style={styles.menuText}>Set Budget</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.menuItem} 
+              onPress={() => handleMenuPress(onManageRecurring)}
+            >
+              <Text style={styles.menuIcon}>🔁</Text>
+              <Text style={styles.menuText}>Manage Recurring</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 

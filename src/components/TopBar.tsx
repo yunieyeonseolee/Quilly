@@ -10,6 +10,7 @@ type TopBarProps = {
   onNextMonth: () => void;
   onToggleView: () => void;
   onMonthYearPress?: () => void;
+  onSearchPress?: () => void;
 };
 
 export const TopBar = ({
@@ -19,6 +20,7 @@ export const TopBar = ({
   onNextMonth,
   onToggleView,
   onMonthYearPress,
+  onSearchPress,
 }: TopBarProps) => {
   return (
     <View style={styles.topBar}>
@@ -44,7 +46,7 @@ export const TopBar = ({
           <Text style={styles.iconText}>{viewMode === 'calendar' ? '☰' : '📅'}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.iconButton}>
+        <TouchableOpacity style={styles.iconButton} onPress={onSearchPress}>
           <Text style={styles.iconText}>🔍</Text>
         </TouchableOpacity>
       </View>

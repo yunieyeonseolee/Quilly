@@ -193,6 +193,10 @@ export const homeStyles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.gray200,
   },
+  transactionRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   transactionLeft: {
     flex: 1,
   },
@@ -208,6 +212,32 @@ export const homeStyles = StyleSheet.create({
   },
   transactionAmount: {
     fontSize: 16,
+    fontWeight: '600',
+  },
+  deleteButton: {
+    borderWidth: 1,
+    borderColor: colors.gray300,
+    borderRadius: 8,
+    marginLeft: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  editButton: {
+    borderWidth: 1,
+    borderColor: colors.gray300,
+    borderRadius: 8,
+    marginLeft: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  deleteButtonText: {
+    fontSize: 12,
+    color: colors.expense,
+    fontWeight: '600',
+  },
+  editButtonText: {
+    fontSize: 12,
+    color: colors.gray700,
     fontWeight: '600',
   },
   emptyState: {

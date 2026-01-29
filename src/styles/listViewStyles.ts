@@ -43,9 +43,12 @@ export const listViewStyles = StyleSheet.create({
   },
   transactionRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 6,
+  },
+  transactionActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   transactionNote: {
     fontSize: 14,
@@ -61,6 +64,32 @@ export const listViewStyles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: colors.expense,
+  },
+  editButton: {
+    borderWidth: 1,
+    borderColor: colors.gray300,
+    borderRadius: 8,
+    marginLeft: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  editButtonText: {
+    fontSize: 12,
+    color: colors.gray700,
+    fontWeight: '600',
+  },
+  deleteButton: {
+    borderWidth: 1,
+    borderColor: colors.gray300,
+    borderRadius: 8,
+    marginLeft: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  deleteButtonText: {
+    fontSize: 12,
+    color: colors.expense,
+    fontWeight: '600',
   },
   emptyList: {
     flex: 1,
