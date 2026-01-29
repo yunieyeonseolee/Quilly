@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from './Text';
 import { colors } from '../styles/colors';
 
 type FloatingButtonProps = {

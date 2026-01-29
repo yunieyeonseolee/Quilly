@@ -6,16 +6,15 @@ import {
   SafeAreaView,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import Modal from 'react-native-modal';
 import { colors } from '../styles/colors';
 import { homeStyles as styles } from '../styles/homeStyles';
-
-type CurrencyCode = 'USD' | 'KRW';
+import { useCurrency } from '../hooks/useCurrency';
+import { Text } from './Text';
+import { TextInput } from './TextInput';
 
 type NewTransaction = {
   type: 'expense' | 'income';
@@ -30,14 +29,8 @@ type AddTransactionModalProps = {
   onClose: () => void;
   onSave: (date?: Date) => void;
   onChangeTransaction: (transaction: NewTransaction) => void;
-  currencyCode: CurrencyCode;
   showDatePicker?: boolean;
   initialDate?: Date;
-};
-
-const currencySymbolMap: Record<CurrencyCode, string> = {
-  USD: '$',
-  KRW: '₩',
 };
 
 const monthNames = [
@@ -61,10 +54,11 @@ export const AddTransactionModal = ({
   onClose,
   onSave,
   onChangeTransaction,
-  currencyCode,
   showDatePicker = false,
   initialDate,
 }: AddTransactionModalProps) => {
+  const { currencySymbol } = useCurrency();
+
   const [view, setView] = useState<'form' | 'category' | 'date'>('form');
   const [isAddingCustom, setIsAddingCustom] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
@@ -73,7 +67,7 @@ export const AddTransactionModal = ({
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [tempDate, setTempDate] = useState(new Date());
 
-  const amountRef = useRef<TextInput>(null);
+  const amountRef = useRef<React.ElementRef<typeof TextInput>>(null);
 
   const expenseCategories = useMemo(
     () => [
@@ -98,7 +92,6 @@ export const AddTransactionModal = ({
   const categoriesForType =
     newTransaction.type === 'expense' ? expenseCategories : incomeCategories;
 
-  const currencySymbol = currencySymbolMap[currencyCode] ?? '$';
 
   const closeAll = () => {
     Keyboard.dismiss();

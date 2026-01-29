@@ -1,4 +1,5 @@
-import { Text, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
+import { Text } from './Text';
 import { homeStyles as styles } from '../styles/homeStyles';
 import { TxDay } from '../types/transaction';
 import { getDaysInMonth, isToday, weekDays } from '../utils/dateUtils';

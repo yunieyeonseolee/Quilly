@@ -5,19 +5,19 @@ import {
   ScrollView,
   StyleSheet,
   Switch,
-  Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import Modal from 'react-native-modal';
 import { colors } from '../styles/colors';
 import { Budget } from '../types/budget';
+import { useCurrency } from '../hooks/useCurrency';
+import { Text } from './Text';
+import { TextInput } from './TextInput';
 
 type SetBudgetModalProps = {
   isVisible: boolean;
   budget: Budget;
-  currencySymbol: string;
   onClose: () => void;
   onSave: (budget: Budget) => void;
   onReset: () => void;
@@ -26,11 +26,11 @@ type SetBudgetModalProps = {
 export const SetBudgetModal = ({
   isVisible,
   budget,
-  currencySymbol,
   onClose,
   onSave,
   onReset,
 }: SetBudgetModalProps) => {
+  const { currencySymbol } = useCurrency();
   const [weeklyAmount, setWeeklyAmount] = useState('');
   const [monthlyAmount, setMonthlyAmount] = useState('');
   const [showWeeklyOnMain, setShowWeeklyOnMain] = useState(true);

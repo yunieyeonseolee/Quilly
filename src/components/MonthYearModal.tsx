@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Modal from 'react-native-modal';
 import { colors } from '../styles/colors';
+import { Text } from './Text';
 
 type Props = {
   isVisible: boolean;
@@ -58,7 +59,7 @@ export default function MonthYearModal({
             <Text style={styles.arrow}>‹</Text>
           </Pressable>
 
-          <Text style={styles.title}>{year}년</Text>
+          <Text style={styles.title}>{year}</Text>
 
           <Pressable
             hitSlop={12}
@@ -154,4 +155,3 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
-

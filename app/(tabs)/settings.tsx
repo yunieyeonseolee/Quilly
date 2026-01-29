@@ -1,5 +1,6 @@
-import { ScrollView, Switch, Text, TouchableOpacity, View } from 'react-native';
-import { useSettings } from '../../src/hooks/useSettings';
+import { ScrollView, Switch, TouchableOpacity, View } from 'react-native';
+import { Text } from '../../src/components/Text';
+import { useSettings } from '../../src/context/SettingsContext';
 import { settingsStyles as styles } from '../../src/styles/settingsStyles';
 
 export default function SettingsScreen() {

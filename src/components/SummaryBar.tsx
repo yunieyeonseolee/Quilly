@@ -1,5 +1,7 @@
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { homeStyles as styles } from '../styles/homeStyles';
+import { useCurrency } from '../hooks/useCurrency';
+import { Text } from './Text';
 
 type SummaryBarProps = {
   income: number;
@@ -8,22 +10,31 @@ type SummaryBarProps = {
 };
 
 export const SummaryBar = ({ income, expense, total }: SummaryBarProps) => {
+  const { currencySymbol } = useCurrency();
+
   return (
     <View style={styles.summaryRow}>
       <View style={styles.summaryLeft}>
         <Text style={styles.summaryText}>
           <Text style={styles.summaryLabel}>Income </Text>
-          <Text style={styles.incomeAmount}>+${income}</Text>
+          <Text style={styles.incomeAmount}>
+            +{currencySymbol}
+            {income.toLocaleString()}
+          </Text>
         </Text>
         <Text style={styles.summaryText}>
           <Text style={styles.summaryLabel}>Expense </Text>
-          <Text style={styles.expenseAmount}>-${expense}</Text>
+          <Text style={styles.expenseAmount}>
+            -{currencySymbol}
+            {expense.toLocaleString()}
+          </Text>
         </Text>
       </View>
       <View style={styles.summaryRight}>
         <Text style={styles.totalLabel}>Total</Text>
         <Text style={[styles.totalAmount, total >= 0 ? styles.positive : styles.negative]}>
-          ${total}
+          {currencySymbol}
+          {total.toLocaleString()}
         </Text>
       </View>
     </View>

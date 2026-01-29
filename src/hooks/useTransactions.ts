@@ -87,7 +87,6 @@ export const useTransactions = () => {
     return totalExpense;
   };
 
-  // Add transaction from calendar (uses currentDate + day)
   const addTransaction = (
     currentDate: Date,
     day: number,
@@ -194,6 +193,35 @@ export const useTransactions = () => {
     return totalExpense;
   };
 
+  const deleteTransaction = (
+  dateKey: string,
+  itemIndex: number
+) => {
+  setTransactions((prev) => {
+    const dayData = prev[dateKey];
+    if (!dayData) return prev;
+
+    const item = dayData.items[itemIndex];
+    if (!item) return prev;
+
+    const newItems = dayData.items.filter((_, i) => i !== itemIndex);
+
+    if (newItems.length === 0) {
+      const { [dateKey]: _, ...rest } = prev;
+      return rest;
+    }
+
+    return {
+      ...prev,
+      [dateKey]: {
+        income: dayData.income - (item.type === 'income' ? item.amount : 0),
+        expense: dayData.expense - (item.type === 'expense' ? item.amount : 0),
+        items: newItems,
+      },
+    };
+  });
+};
+
   return {
     transactions,
     isLoading,
@@ -205,5 +233,6 @@ export const useTransactions = () => {
     addTransactionWithDate,
     getWeeklySpent,
     getMonthlySpent,
+    deleteTransaction,
   };
 };

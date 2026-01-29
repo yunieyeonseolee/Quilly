@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '../../src/components/Text';
 
 import { AddTransactionModal } from '../../src/components/AddTransactionModal';
 import { BudgetBar } from '../../src/components/BudgetBar';
@@ -13,11 +14,10 @@ import { SummaryBar } from '../../src/components/SummaryBar';
 import { TopBar } from '../../src/components/TopBar';
 
 import { useBudget } from '../../src/hooks/useBudget';
-import { useSettings } from '../../src/hooks/useSettings';
 import { useTransactions } from '../../src/hooks/useTransactions';
 
 import { homeStyles as styles } from '../../src/styles/homeStyles';
-import { formatSelectedDate } from '../../src/utils/dateUtils';
+import { formatSelectedDate, getDateKey } from '../../src/utils/dateUtils';
 
 export default function HomeScreen() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -35,7 +35,6 @@ export default function HomeScreen() {
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth() + 1;
 
-  const { settings } = useSettings();
   const { budget, updateBudget, resetBudget } = useBudget();
 
   const [newTransaction, setNewTransaction] = useState({
@@ -54,10 +53,10 @@ export default function HomeScreen() {
   addTransactionWithDate,
   getWeeklySpent,
   getMonthlySpent,
+  deleteTransaction,
 } = useTransactions();
 
 
-  const currencySymbol = settings.currency === 'KRW' ? '₩' : '$';
   const weeklySpent = getWeeklySpent();
   const monthlySpent = getMonthlySpent();
 
@@ -148,7 +147,6 @@ const handleAddTransaction = (date?: Date) => {
         budget={budget}
         weeklySpent={weeklySpent}
         monthlySpent={monthlySpent}
-        currencySymbol={currencySymbol}
         onPress={() => setIsBudgetModalVisible(true)}
       />
 
@@ -177,29 +175,29 @@ const handleAddTransaction = (date?: Date) => {
   }}
 />
       <DayDetailModal
-        isVisible={isModalVisible}
-        dateFormatted={dateFormatted}
-        transaction={selectedTransaction}
-        onClose={closeDayModal}
-        onAddPress={openAddModal}
-        onModalHide={handleModalHide}
-      />
+  isVisible={isModalVisible}
+  dateFormatted={dateFormatted}
+  dateKey={selectedDay ? getDateKey(currentDate, selectedDay) : ''}
+  transaction={selectedTransaction}
+  onClose={closeDayModal}
+  onAddPress={openAddModal}
+  onModalHide={handleModalHide}
+  onDeleteTransaction={deleteTransaction}
+/>
 
       <AddTransactionModal
-  isVisible={isAddModalVisible}
-  newTransaction={newTransaction}
-  onClose={closeAddModal}
-  onSave={handleAddTransaction}
-  onChangeTransaction={setNewTransaction}
-  currencyCode={settings.currency}
-  showDatePicker={isAddModalFromFloating}
-  initialDate={new Date()}
-/>
+        isVisible={isAddModalVisible}
+        newTransaction={newTransaction}
+        onClose={closeAddModal}
+        onSave={handleAddTransaction}
+        onChangeTransaction={setNewTransaction}
+        showDatePicker={isAddModalFromFloating}
+        initialDate={new Date()}
+      />
 
       <SetBudgetModal
         isVisible={isBudgetModalVisible}
         budget={budget}
-        currencySymbol={currencySymbol}
         onClose={() => setIsBudgetModalVisible(false)}
         onSave={(newBudget) => updateBudget(newBudget)}
         onReset={resetBudget}
