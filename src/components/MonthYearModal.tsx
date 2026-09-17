@@ -26,10 +26,13 @@ export default function MonthYearModal({
 
   // keep it in sync when reopened
   React.useEffect(() => {
-    if (isVisible) {
+    if (!isVisible) return;
+
+    const t = setTimeout(() => {
       setYear(initialYear);
       setMonth(initialMonth);
-    }
+    }, 0);
+    return () => clearTimeout(t);
   }, [isVisible, initialYear, initialMonth]);
 
   const rows = useMemo(() => {

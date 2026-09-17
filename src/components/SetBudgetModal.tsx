@@ -39,13 +39,16 @@ export const SetBudgetModal = ({
   const [monthlyCycleAnchorDay, setMonthlyCycleAnchorDay] = useState(1);
 
   useEffect(() => {
-    if (isVisible) {
+    if (!isVisible) return;
+
+    const t = setTimeout(() => {
       setWeeklyAmount(budget.weeklyAmount > 0 ? budget.weeklyAmount.toString() : '');
       setMonthlyAmount(budget.monthlyAmount > 0 ? budget.monthlyAmount.toString() : '');
       setShowWeeklyOnMain(budget.showWeeklyOnMain);
       setShowMonthlyOnMain(budget.showMonthlyOnMain);
       setMonthlyCycleAnchorDay(budget.monthlyCycleAnchorDay || 1);
-    }
+    }, 0);
+    return () => clearTimeout(t);
   }, [isVisible, budget]);
 
   const handleSave = () => {

@@ -38,6 +38,10 @@ yarn-error.*
 
 app-example
 
+# local share/preview artifacts
+quilly-android-download-qr.png
+quilly-*-preview.png
+
 # generated native folders
 /ios
 /android

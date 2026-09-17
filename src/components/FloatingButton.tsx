@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Pressable, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from './Text';
 import { colors } from '../styles/colors';
 
@@ -17,6 +19,11 @@ export const FloatingButton = ({
   onManageRecurring,
 }: FloatingButtonProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const tabBarWidth = Math.min(280, width - 48);
+  const buttonBottom = Math.max(insets.bottom + 92, 104);
+  const buttonRight = (width - tabBarWidth) / 2;
 
   const toggleMenu = () => {
     setIsExpanded(!isExpanded);
@@ -40,7 +47,7 @@ export const FloatingButton = ({
         />
       )}
 
-      <View style={styles.container}>
+      <View style={[styles.container, { bottom: buttonBottom, right: buttonRight }]}>
         {/* Menu Options */}
         {isExpanded && (
           <View style={styles.menu}>
@@ -80,7 +87,7 @@ export const FloatingButton = ({
 
         {/* Main Button */}
         <TouchableOpacity style={styles.fab} onPress={toggleMenu}>
-          <Text style={styles.fabText}>{isExpanded ? '✕' : '✎'}</Text>
+          <Ionicons name={isExpanded ? 'close' : 'pencil'} size={22} color={colors.white} />
         </TouchableOpacity>
       </View>
     </>
@@ -99,8 +106,6 @@ const styles = StyleSheet.create({
   },
   container: {
     position: 'absolute',
-    bottom: 30,
-    right: 20,
     alignItems: 'flex-end',
     zIndex: 100,
   },
@@ -142,9 +147,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-  },
-  fabText: {
-    fontSize: 24,
-    color: colors.white,
   },
 });

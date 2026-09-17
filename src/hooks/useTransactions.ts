@@ -229,7 +229,7 @@ export const useTransactions = () => {
     const year = currentDate.getFullYear();
     const monthIndex = currentDate.getMonth();
     const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-    const entries: Array<{ dateKey: string; day: number; items: TxItem[] }> = [];
+    const entries: { dateKey: string; day: number; items: TxItem[] }[] = [];
 
     for (let day = 1; day <= daysInMonth; day++) {
       const dateKey = getDateKey(currentDate, day);

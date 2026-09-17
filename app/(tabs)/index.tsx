@@ -10,6 +10,7 @@ import { DayDetailModal } from '../../src/components/DayDetailModal';
 import { FloatingButton } from '../../src/components/FloatingButton';
 import { ListView } from '../../src/components/ListView';
 import MonthYearModal from '../../src/components/MonthYearModal';
+import { PaymentReminderModal } from '../../src/components/PaymentReminderModal';
 import { RecurringManagerModal } from '../../src/components/RecurringManagerModal';
 import { SearchModal } from '../../src/components/SearchModal';
 import { SetBudgetModal } from '../../src/components/SetBudgetModal';
@@ -34,6 +35,7 @@ export default function HomeScreen() {
   const [isRecurringModalVisible, setIsRecurringModalVisible] = useState(false);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isPaymentReminderVisible, setIsPaymentReminderVisible] = useState(false);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [pendingModal, setPendingModal] = useState<null | 'add' | 'edit'>(null);
   const [isAddModalFromFloating, setIsAddModalFromFloating] = useState(false);
@@ -60,7 +62,7 @@ export default function HomeScreen() {
     type: 'expense' as 'expense' | 'income',
     amount: '',
     note: '',
-    category: 'Food',
+    category: '',
     repeat: 'none' as 'none' | 'daily' | 'weekday' | 'weekly' | 'monthly',
     repeatEndDate: null as Date | null,
   });
@@ -182,7 +184,7 @@ export default function HomeScreen() {
       type: 'expense',
       amount: '',
       note: '',
-      category: 'Food',
+      category: '',
       repeat: 'none',
       repeatEndDate: null,
     });
@@ -334,7 +336,7 @@ const handleAddTransaction = (date?: Date) => {
       )}
 
       <FloatingButton
-  onPaymentReminder={() => console.log('Payment Reminder')}
+  onPaymentReminder={() => setIsPaymentReminderVisible(true)}
   onSetBudget={() => setIsBudgetModalVisible(true)}
   onNewTransaction={() => {
     setIsAddModalFromFloating(true);
@@ -406,6 +408,11 @@ const handleAddTransaction = (date?: Date) => {
         onClose={closeSearch}
         onSelectDate={handleSearchSelect}
       />
+
+      <PaymentReminderModal
+  isVisible={isPaymentReminderVisible}
+  onClose={() => setIsPaymentReminderVisible(false)}
+/>
     </View>
   );
 }

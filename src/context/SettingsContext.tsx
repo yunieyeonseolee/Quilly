@@ -6,14 +6,14 @@ const SETTINGS_KEY = 'quilly_settings';
 type Settings = {
   notificationsEnabled: boolean;
   language: 'system' | 'en' | 'ko';
-  currency: 'USD' | 'KRW';
+  currency: 'CAD' | 'KRW';
   recurringApplyTimeMinutes: number;
 };
 
 const defaultSettings: Settings = {
   notificationsEnabled: true,
   language: 'system',
-  currency: 'USD',
+  currency: 'CAD',
   recurringApplyTimeMinutes: 22 * 60,
 };
 

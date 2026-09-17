@@ -59,7 +59,7 @@ export const BudgetBar = ({
     );
   };
 
-  const pages: Array<{ key: 'weekly' | 'monthly'; node: React.ReactNode }> = [];
+  const pages: { key: 'weekly' | 'monthly'; node: React.ReactNode }[] = [];
   if (showWeekly) {
     pages.push({
       key: 'weekly',

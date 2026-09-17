@@ -3,16 +3,16 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Dimensions,
   Keyboard,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Modal from 'react-native-modal';
+import { useCurrency } from '../hooks/useCurrency';
 import { colors } from '../styles/colors';
 import { homeStyles as styles } from '../styles/homeStyles';
-import { useCurrency } from '../hooks/useCurrency';
 import { Text } from './Text';
 import { TextInput } from './TextInput';
 
@@ -22,7 +22,7 @@ type NewTransaction = {
   note: string;
   category: string;
   repeat: 'none' | 'daily' | 'weekday' | 'weekly' | 'monthly';
-  repeatEndDate?: Date | null;
+  repeatEndDate: Date | null;
 };
 
 type AddTransactionModalProps = {
@@ -67,7 +67,6 @@ export const AddTransactionModal = ({
   const [isAddingCustom, setIsAddingCustom] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
 
-  // Date picker state (iOS wheel)
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [tempDate, setTempDate] = useState(new Date());
   const [activeDatePicker, setActiveDatePicker] = useState<'transaction' | 'repeatEnd'>(
@@ -181,18 +180,19 @@ export const AddTransactionModal = ({
   useEffect(() => {
     if (!isVisible) return;
 
-    setView('form');
-    setIsAddingCustom(false);
-    setCustomCategory('');
-
-    const base = initialDate ?? new Date();
-    setSelectedDate(base);
-    setTempDate(base);
-    setActiveDatePicker('transaction');
-
-    const t = setTimeout(() => amountRef.current?.focus(), 250);
+    const t = setTimeout(() => {
+      const base = initialDate ?? new Date();
+      setView('form');
+      setIsAddingCustom(false);
+      setCustomCategory('');
+      setSelectedDate(base);
+      setTempDate(base);
+      setActiveDatePicker('transaction');
+      amountRef.current?.focus();
+    }, 0);
     return () => clearTimeout(t);
   }, [isVisible, initialDate]);
+
 
   const formatDate = (date: Date) => {
     const today = new Date();
@@ -225,10 +225,10 @@ export const AddTransactionModal = ({
 
         <View style={local.datePickerButtonsSmall}>
           <TouchableOpacity style={local.datePickerButton} onPress={cancelDate}>
-            <Text style={local.cancelText}>취소</Text>
+            <Text style={local.cancelText}>Cancel</Text>
           </TouchableOpacity>
           <TouchableOpacity style={local.datePickerButton} onPress={confirmDate}>
-            <Text style={local.confirmText}>확인</Text>
+            <Text style={local.confirmText}>Confirm</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -390,7 +390,7 @@ export const AddTransactionModal = ({
 
                     {/* Note Input */}
                     <TextInput
-                      style={styles.noteInput}
+                      style={[styles.noteInput, local.noteInputTight]}
                       placeholder="Add a note..."
                       value={newTransaction.note}
                       onChangeText={(text) =>
@@ -450,7 +450,12 @@ export const AddTransactionModal = ({
                   </ScrollView>
 
                   {/* Save pinned */}
-                  <View style={[local.footerPinned, { height: footerHeight }]}>
+                  <View
+                    style={[
+                      local.footerPinned,
+                      { height: footerHeight },
+                    ]}
+                  >
                     <TouchableOpacity
                       style={[styles.addButton, !canSave && local.disabledBtn, { marginTop: 0 }]}
                       onPress={handleSave}
@@ -542,7 +547,7 @@ export const AddTransactionModal = ({
                           { label: 'Weekdays (Mon–Fri)', value: 'weekday' },
                           { label: 'Weekly', value: 'weekly' },
                           { label: 'Monthly', value: 'monthly' },
-                        ] as Array<{ label: string; value: NewTransaction['repeat'] }>
+                        ] as { label: string; value: NewTransaction['repeat'] }[]
                       ).map((option) => {
                         const selected = newTransaction.repeat === option.value;
                         return (
@@ -619,37 +624,42 @@ const local = StyleSheet.create({
   scrollContent: { paddingBottom: 16 },
 
   amountWrap: {
-    marginTop: 20,
+    marginTop: 8,
     marginBottom: 20,
     flexDirection: 'row',
     alignItems: 'baseline',
     justifyContent: 'center',
   },
   currencySymbol: {
-    fontSize: 40,
+    fontSize: 28,
     fontWeight: '600',
     marginRight: 4,
   },
   amountInput: {
-    fontSize: 40,
+    fontSize: 28,
     fontWeight: '600',
     minWidth: 50,
     textAlign: 'left',
+  },
+  noteInputTight: {
+    marginTop: 2,
+    paddingVertical: 6,
+    fontSize: 12,
   },
 
   row: {
     marginBottom: 12,
     borderRadius: 12,
-    paddingVertical: 14,
+    paddingVertical: 7,
     paddingHorizontal: 14,
     backgroundColor: 'rgba(0,0,0,0.05)',
     flexDirection: 'row',
     alignItems: 'center',
   },
-  rowLabel: { fontSize: 14, fontWeight: '700', opacity: 0.85 },
-  rowValue: { flex: 1, fontSize: 14, textAlign: 'right', opacity: 0.9, marginRight: 8 },
+  rowLabel: { fontSize: 12, fontWeight: '700', opacity: 0.85 },
+  rowValue: { flex: 1, fontSize: 12, textAlign: 'right', opacity: 0.9, marginRight: 8 },
   rowPlaceholder: { opacity: 0.5 },
-  rowChevron: { fontSize: 18, opacity: 0.6 },
+  rowChevron: { fontSize: 14, opacity: 0.6 },
   clearRow: {
     marginBottom: 12,
     alignSelf: 'flex-start',

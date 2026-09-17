@@ -55,13 +55,17 @@ export const RecurringManagerModal = ({
 
   useEffect(() => {
     if (!isVisible) return;
-    const minutes = settings.recurringApplyTimeMinutes ?? 22 * 60;
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    const base = new Date();
-    base.setHours(hours, mins, 0, 0);
-    setTempTime(base);
-    setShowTimePicker(false);
+
+    const t = setTimeout(() => {
+      const minutes = settings.recurringApplyTimeMinutes ?? 22 * 60;
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      const base = new Date();
+      base.setHours(hours, mins, 0, 0);
+      setTempTime(base);
+      setShowTimePicker(false);
+    }, 0);
+    return () => clearTimeout(t);
   }, [isVisible, settings.recurringApplyTimeMinutes]);
 
   const formatTime = (minutes: number) => {

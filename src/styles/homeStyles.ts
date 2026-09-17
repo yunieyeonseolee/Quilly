@@ -263,14 +263,14 @@ export const homeStyles = StyleSheet.create({
   typeToggle: {
     flexDirection: 'row',
     backgroundColor: colors.gray200,
-    borderRadius: 8,
-    padding: 4,
-    marginBottom: 20,
+    borderRadius: 10,
+    padding: 3,
+    marginBottom: 12,
   },
   typeButton: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 6,
+    paddingVertical: 7,
+    borderRadius: 7,
     alignItems: 'center',
   },
   typeButtonActive: {

@@ -1,7 +1,7 @@
 import { useSettings } from '../context/SettingsContext';
 
 const currencySymbolMap = {
-  USD: '$',
+  CAD: '$',
   KRW: '₩',
 } as const;
 

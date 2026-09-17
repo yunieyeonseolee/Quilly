@@ -21,7 +21,7 @@ export const getDaysInMonth = (date: Date) => {
   const lastDay = new Date(year, month + 1, 0);
   const daysInMonth = lastDay.getDate();
   const startingDay = firstDay.getDay();
-  const days: Array<number | null> = [];
+  const days: (number | null)[] = [];
 
   for (let i = 0; i < startingDay; i++) days.push(null);
   for (let i = 1; i <= daysInMonth; i++) days.push(i);
